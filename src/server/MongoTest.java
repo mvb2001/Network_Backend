@@ -11,7 +11,7 @@ public class MongoTest {
 
         MongoCollection<Document> collection = db.getCollection("team");
 
-        Document player = new Document("name", "Add your name here")
+        Document player = new Document("name", "Add your name")
                 .append("score", 10);
 
         collection.insertOne(player);
