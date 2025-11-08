@@ -1,0 +1,29 @@
+# IntelliJ IDEA
+.idea/
+*.iml
+
+# Compiled classes
+out/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Eclipse (optional)
+.classpath
+.project
+.settings/
+bin/
+
+# NetBeans (optional)
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+# VS Code (optional)
+.vscode/
+
+# Keep your MongoDB JARs
+!libs/
