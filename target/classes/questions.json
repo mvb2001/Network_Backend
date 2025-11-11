@@ -1,42 +1,57 @@
 [
   {
-    "id": "Q1",
-    "question": "What is the capital of France?",
-    "options": ["London", "Paris", "Berlin", "Madrid"],
-    "correctAnswer": 1,
-    "category": "Geography",
-    "difficulty": "Easy"
+    "_id": {
+      "$oid": "6732f77911039ec90a205024"
+    },
+    "questionText": "What is the capital of France?",
+    "options": ["Paris", "London", "Berlin", "Rome"],
+    "correctOption": "Paris",
+    "timeLimitSeconds": {
+      "$numberInt": "15"
+    }
   },
   {
-    "id": "Q2",
-    "question": "Which programming language is known as the 'language of the web'?",
+    "_id": {
+      "$oid": "6732f77911039ec90a205025"
+    },
+    "questionText": "Which programming language is known as the 'language of the web'?",
     "options": ["Python", "Java", "JavaScript", "C++"],
-    "correctAnswer": 2,
-    "category": "Technology",
-    "difficulty": "Easy"
+    "correctOption": "JavaScript",
+    "timeLimitSeconds": {
+      "$numberInt": "15"
+    }
   },
   {
-    "id": "Q3",
-    "question": "What is 15 + 27?",
+    "_id": {
+      "$oid": "6732f77911039ec90a205026"
+    },
+    "questionText": "What is 15 + 27?",
     "options": ["40", "42", "43", "45"],
-    "correctAnswer": 1,
-    "category": "Mathematics",
-    "difficulty": "Easy"
+    "correctOption": "42",
+    "timeLimitSeconds": {
+      "$numberInt": "10"
+    }
   },
   {
-    "id": "Q4",
-    "question": "In which year did World War II end?",
+    "_id": {
+      "$oid": "6732f77911039ec90a205027"
+    },
+    "questionText": "In which year did World War II end?",
     "options": ["1943", "1944", "1945", "1946"],
-    "correctAnswer": 2,
-    "category": "History",
-    "difficulty": "Medium"
+    "correctOption": "1945",
+    "timeLimitSeconds": {
+      "$numberInt": "20"
+    }
   },
   {
-    "id": "Q5",
-    "question": "What is the chemical symbol for gold?",
+    "_id": {
+      "$oid": "6732f77911039ec90a205028"
+    },
+    "questionText": "What is the chemical symbol for gold?",
     "options": ["Go", "Gd", "Au", "Ag"],
-    "correctAnswer": 2,
-    "category": "Science",
-    "difficulty": "Medium"
+    "correctOption": "Au",
+    "timeLimitSeconds": {
+      "$numberInt": "15"
+    }
   }
 ]

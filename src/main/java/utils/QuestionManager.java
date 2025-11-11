@@ -73,11 +73,11 @@ public class QuestionManager {
     }
 
     /**
-     * Get question by ID
+     * Get question by ID (MongoDB ObjectId)
      */
-    public synchronized Question getQuestionById(String id) {
+    public synchronized Question getQuestionById(String oid) {
         return questions.stream()
-                .filter(q -> q.getId().equals(id))
+                .filter(q -> q.get_id().get$oid().equals(oid))
                 .findFirst()
                 .orElse(null);
     }
@@ -87,23 +87,30 @@ public class QuestionManager {
      */
     public synchronized boolean addQuestion(Question question) {
         try {
+            // Ensure the question has an ID
+            if (question.get_id() == null) {
+                question.set_id(new Question.MongoId());
+            }
+            
             // Check if question with same ID already exists
-            if (getQuestionById(question.getId()) != null) {
-                System.err.println("Question with ID " + question.getId() + " already exists.");
+            String oid = question.get_id().get$oid();
+            if (getQuestionById(oid) != null) {
+                System.err.println("Question with ID " + oid + " already exists.");
                 return false;
             }
             
-            // Generate ID if not provided
-            if (question.getId() == null || question.getId().isEmpty()) {
-                question.setId(generateQuestionId());
+            // Ensure time limit is set
+            if (question.getTimeLimitSeconds() == null) {
+                question.setTimeLimitSeconds(new Question.TimeLimit(15));
             }
             
             questions.add(question);
             saveQuestions();
-            System.out.println("Added question: " + question.getId());
+            System.out.println("Added question: " + oid);
             return true;
         } catch (Exception e) {
             System.err.println("Error adding question: " + e.getMessage());
+            e.printStackTrace();
             return false;
         }
     }
@@ -111,21 +118,23 @@ public class QuestionManager {
     /**
      * Update an existing question
      */
-    public synchronized boolean updateQuestion(String id, Question updatedQuestion) {
+    public synchronized boolean updateQuestion(String oid, Question updatedQuestion) {
         try {
             for (int i = 0; i < questions.size(); i++) {
-                if (questions.get(i).getId().equals(id)) {
-                    updatedQuestion.setId(id); // Ensure ID doesn't change
+                if (questions.get(i).get_id().get$oid().equals(oid)) {
+                    // Ensure ID doesn't change
+                    updatedQuestion.set_id(questions.get(i).get_id());
                     questions.set(i, updatedQuestion);
                     saveQuestions();
-                    System.out.println("Updated question: " + id);
+                    System.out.println("Updated question: " + oid);
                     return true;
                 }
             }
-            System.err.println("Question with ID " + id + " not found.");
+            System.err.println("Question with ID " + oid + " not found.");
             return false;
         } catch (Exception e) {
             System.err.println("Error updating question: " + e.getMessage());
+            e.printStackTrace();
             return false;
         }
     }
@@ -133,15 +142,15 @@ public class QuestionManager {
     /**
      * Delete a question by ID
      */
-    public synchronized boolean deleteQuestion(String id) {
+    public synchronized boolean deleteQuestion(String oid) {
         try {
-            boolean removed = questions.removeIf(q -> q.getId().equals(id));
+            boolean removed = questions.removeIf(q -> q.get_id().get$oid().equals(oid));
             if (removed) {
                 saveQuestions();
-                System.out.println("Deleted question: " + id);
+                System.out.println("Deleted question: " + oid);
                 return true;
             }
-            System.err.println("Question with ID " + id + " not found.");
+            System.err.println("Question with ID " + oid + " not found.");
             return false;
         } catch (Exception e) {
             System.err.println("Error deleting question: " + e.getMessage());
@@ -150,28 +159,21 @@ public class QuestionManager {
     }
 
     /**
-     * Get questions by category
+     * Get questions by text search
      */
-    public synchronized List<Question> getQuestionsByCategory(String category) {
+    public synchronized List<Question> searchQuestions(String searchText) {
         return questions.stream()
-                .filter(q -> q.getCategory().equalsIgnoreCase(category))
+                .filter(q -> q.getQuestionText().toLowerCase().contains(searchText.toLowerCase()))
                 .collect(Collectors.toList());
     }
 
     /**
-     * Get questions by difficulty
+     * Get questions by time limit
      */
-    public synchronized List<Question> getQuestionsByDifficulty(String difficulty) {
+    public synchronized List<Question> getQuestionsByTimeLimit(int seconds) {
         return questions.stream()
-                .filter(q -> q.getDifficulty().equalsIgnoreCase(difficulty))
+                .filter(q -> q.getTimeLimitSeconds().getSeconds() == seconds)
                 .collect(Collectors.toList());
-    }
-
-    /**
-     * Generate a unique question ID
-     */
-    private String generateQuestionId() {
-        return "Q" + System.currentTimeMillis() + "_" + (questions.size() + 1);
     }
 
     /**

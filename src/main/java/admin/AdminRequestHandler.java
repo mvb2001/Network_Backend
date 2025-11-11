@@ -89,10 +89,10 @@ public class AdminRequestHandler implements Runnable {
                     return handleGetAllQuestions();
                 case "GET_QUESTION":
                     return handleGetQuestion(jsonRequest);
-                case "GET_BY_CATEGORY":
-                    return handleGetByCategory(jsonRequest);
-                case "GET_BY_DIFFICULTY":
-                    return handleGetByDifficulty(jsonRequest);
+                case "SEARCH_QUESTIONS":
+                    return handleSearchQuestions(jsonRequest);
+                case "GET_BY_TIME_LIMIT":
+                    return handleGetByTimeLimit(jsonRequest);
                 default:
                     return createErrorResponse("Unknown action: " + action);
             }
@@ -194,20 +194,20 @@ public class AdminRequestHandler implements Runnable {
         }
     }
 
-    private String handleGetByCategory(ObjectNode request) {
+    private String handleSearchQuestions(ObjectNode request) {
         try {
-            String category = request.get("category").asText();
-            List<Question> questions = questionManager.getQuestionsByCategory(category);
+            String searchText = request.get("searchText").asText();
+            List<Question> questions = questionManager.searchQuestions(searchText);
             return createSuccessResponse("Questions retrieved", "questions", questions);
         } catch (Exception e) {
             return createErrorResponse("Error retrieving questions: " + e.getMessage());
         }
     }
 
-    private String handleGetByDifficulty(ObjectNode request) {
+    private String handleGetByTimeLimit(ObjectNode request) {
         try {
-            String difficulty = request.get("difficulty").asText();
-            List<Question> questions = questionManager.getQuestionsByDifficulty(difficulty);
+            int timeLimit = request.get("timeLimit").asInt();
+            List<Question> questions = questionManager.getQuestionsByTimeLimit(timeLimit);
             return createSuccessResponse("Questions retrieved", "questions", questions);
         } catch (Exception e) {
             return createErrorResponse("Error retrieving questions: " + e.getMessage());
