@@ -34,28 +34,38 @@ public class ClientHandler implements Runnable {
             playerName = in.readLine();
             System.out.println(playerName + " joined the game.");
 
-            // Try MongoDB insertion safely
+            // Save to MongoDB if available
             try {
                 MongoDatabase db = utils.MongoDBConnection.getDatabase();
                 if (db != null) {
                     db.getCollection("players").insertOne(new Document("name", playerName));
                     System.out.println("✅ Player inserted successfully into MongoDB!");
-                } else {
-                    System.out.println("⚠️ MongoDB not available. Player not saved.");
                 }
             } catch (Exception e) {
                 System.out.println("⚠️ Failed to save player to MongoDB. Continuing without DB.");
                 e.printStackTrace();
             }
 
-            // Broadcast join message
+            // Add to client set
+            synchronized (clients) {
+                clients.add(this);
+            }
+
+            // Broadcast join message to others
             QuizServer.broadcast("Player joined: " + playerName, this);
 
-            // Listen for messages from client
+            // --- Send full lobby list to this new client ---
+            sendLobbyList();
+
+            // Listen for messages
             String message;
             while ((message = in.readLine()) != null) {
-                System.out.println(playerName + ": " + message);
-                QuizServer.broadcast(playerName + ": " + message, this);
+                if (message.equalsIgnoreCase("REQUEST_LOBBY_LIST")) {
+                    sendLobbyList(); // respond to explicit requests
+                } else {
+                    System.out.println(playerName + ": " + message);
+                    QuizServer.broadcast(playerName + ": " + message, this);
+                }
             }
 
         } catch (IOException e) {
@@ -65,12 +75,27 @@ public class ClientHandler implements Runnable {
                 socket.close();
             } catch (IOException ignored) {}
             QuizServer.removeClient(this);
+            QuizServer.broadcast("Player left: " + playerName, this);
         }
     }
 
+    // Send a message to this client
     public void sendMessage(String message) {
         if (out != null) {
             out.println(message);
         }
+    }
+
+    // Send the full lobby list to this client
+    private void sendLobbyList() {
+        StringBuilder sb = new StringBuilder();
+        synchronized (clients) {
+            for (ClientHandler c : clients) {
+                sb.append(c.getPlayerName()).append(",");
+            }
+        }
+        // Remove trailing comma
+        if (sb.length() > 0) sb.setLength(sb.length() - 1);
+        sendMessage("LobbyList:" + sb.toString());
     }
 }
