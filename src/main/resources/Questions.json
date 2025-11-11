@@ -1,0 +1,12 @@
+[
+  {
+    "text": "Which planet is known as the Red Planet?",
+    "options": ["Earth", "Mars", "Jupiter", "Venus"],
+    "correctIndex": 1
+  },
+  {
+    "text": "Who developed Java?",
+    "options": ["James Gosling", "Dennis Ritchie", "Guido van Rossum", "Bjarne Stroustrup"],
+    "correctIndex": 0
+  }
+]
