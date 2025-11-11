@@ -51,13 +51,13 @@ public class ClientHandler implements Runnable {
                 clients.add(this);
             }
 
-            // Broadcast join message to others
+            // Broadcast join message
             QuizServer.broadcast("Player joined: " + playerName, this);
 
-            // --- Send full lobby list to this new client ---
+            // Send full lobby list to this client
             sendLobbyList();
 
-            // Listen for messages
+            // Listen for messages from client
             String message;
             while ((message = in.readLine()) != null) {
                 if (message.equalsIgnoreCase("REQUEST_LOBBY_LIST")) {
@@ -69,12 +69,17 @@ public class ClientHandler implements Runnable {
             }
 
         } catch (IOException e) {
-            e.printStackTrace();
+            // Normal if client disconnects abruptly
+            System.out.println(playerName + " disconnected.");
         } finally {
             try {
                 socket.close();
             } catch (IOException ignored) {}
-            QuizServer.removeClient(this);
+
+            synchronized (clients) {
+                clients.remove(this);
+            }
+
             QuizServer.broadcast("Player left: " + playerName, this);
         }
     }
@@ -94,8 +99,7 @@ public class ClientHandler implements Runnable {
                 sb.append(c.getPlayerName()).append(",");
             }
         }
-        // Remove trailing comma
-        if (sb.length() > 0) sb.setLength(sb.length() - 1);
+        if (sb.length() > 0) sb.setLength(sb.length() - 1); // remove trailing comma
         sendMessage("LobbyList:" + sb.toString());
     }
 }
