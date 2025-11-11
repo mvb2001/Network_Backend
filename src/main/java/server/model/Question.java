@@ -1,4 +1,4 @@
-package server;
+package server.model;
 
 import java.io.Serializable;
 import java.util.List;
@@ -7,13 +7,15 @@ public class Question implements Serializable {
     private String text;
     private List<String> options;
     private int correctIndex;
+    private int timeLimitSeconds; // ⏱️ new field
 
-    public Question() {} // Jackson needs default constructor
+    public Question() {} // Needed for Jackson & MongoDB
 
-    public Question(String text, List<String> options, int correctIndex) {
+    public Question(String text, List<String> options, int correctIndex, int timeLimitSeconds) {
         this.text = text;
         this.options = options;
         this.correctIndex = correctIndex;
+        this.timeLimitSeconds = timeLimitSeconds;
     }
 
     public String getText() { return text; }
@@ -24,4 +26,7 @@ public class Question implements Serializable {
 
     public int getCorrectIndex() { return correctIndex; }
     public void setCorrectIndex(int correctIndex) { this.correctIndex = correctIndex; }
+
+    public int getTimeLimitSeconds() { return timeLimitSeconds; }
+    public void setTimeLimitSeconds(int timeLimitSeconds) { this.timeLimitSeconds = timeLimitSeconds; }
 }

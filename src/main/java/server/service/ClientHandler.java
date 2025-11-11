@@ -1,9 +1,12 @@
 // NETWORK_BACKEND/src/main/java/server/ClientHandler.java
-package server;
+package server.service;
 
 import java.io.*;
 import java.net.Socket;
 import java.util.List;
+
+import server.model.Question;
+import server.util.MongoUtil;
 
 public class ClientHandler implements Runnable {
 

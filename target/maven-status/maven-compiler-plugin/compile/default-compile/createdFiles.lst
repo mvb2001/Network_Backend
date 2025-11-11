@@ -1,8 +1,8 @@
 Main.class
+server\util\MongoUtil.class
+server\controller\QuestionController.class
 server\MongoTest.class
-server\MongoUtil.class
-server\Question.class
-server\ClientHandler.class
-server\QuestionController.class
+server\model\Question.class
+server\service\ClientHandler.class
 server\QuizServer.class
 utils\MongoDBConnection.class

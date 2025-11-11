@@ -1,8 +1,13 @@
 package server;
 
-import java.io.*;
-import java.net.*;
+import java.io.IOException;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.util.*;
+import server.model.Question;
+import server.util.MongoUtil;
+import server.controller.QuestionController;
+import server.service.ClientHandler;
 
 public class QuizServer {
     private static final int PORT = 5000;
@@ -12,7 +17,7 @@ public class QuizServer {
     public static void main(String[] args) {
         // Load questions from MongoDB
         questions = MongoUtil.loadQuestions();
-        System.out.println("Loaded " + questions.size() + " questions from MongoDB");
+        System.out.println("📘 Loaded " + questions.size() + " questions from MongoDB");
 
         // Start REST API for Admin
         try {
@@ -23,7 +28,7 @@ public class QuizServer {
 
         // Start TCP server for quiz clients
         try (ServerSocket serverSocket = new ServerSocket(PORT)) {
-            System.out.println("Quiz Server started on port " + PORT);
+            System.out.println("🎯 Quiz Server started on port " + PORT);
 
             while (true) {
                 Socket socket = serverSocket.accept();
