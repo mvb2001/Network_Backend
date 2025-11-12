@@ -1,67 +1,70 @@
 package utils;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.bson.Document;
+import org.bson.types.ObjectId;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.ReplaceOptions;
 
+import io.github.cdimascio.dotenv.Dotenv;
 import model.Question;
 
 /**
  * QuestionManager handles CRUD operations for quiz questions
- * Stores and retrieves questions from a JSON file
+ * Stores and retrieves questions from MongoDB database
  */
 public class QuestionManager {
-    private static final String QUESTIONS_FILE = "src/main/resources/questions.json";
+    private final MongoCollection<Document> questionsCollection;
     private final ObjectMapper objectMapper;
-    private List<Question> questions;
+    private final MongoClient mongoClient;
 
     public QuestionManager() {
         this.objectMapper = new ObjectMapper();
         this.objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
-        this.questions = new ArrayList<>();
-        loadQuestions();
+        
+        // Load environment variables
+        Dotenv dotenv = Dotenv.configure()
+                .directory(".idea")
+                .load();
+        
+        String mongoUri = dotenv.get("MONGO_URI");
+        String dbName = dotenv.get("MONGO_DB");
+        
+        // Connect to MongoDB
+        this.mongoClient = MongoClients.create(mongoUri);
+        MongoDatabase database = mongoClient.getDatabase(dbName);
+        this.questionsCollection = database.getCollection("questions");
+        
+        System.out.println("Connected to MongoDB database: " + dbName);
+        System.out.println("Question Manager initialized with " + getQuestionCount() + " questions.");
     }
 
     /**
-     * Load questions from JSON file
+     * Load questions from MongoDB
      */
-    public synchronized void loadQuestions() {
+    public synchronized List<Question> loadQuestions() {
         try {
-            File file = new File(QUESTIONS_FILE);
-            if (file.exists()) {
-                Question[] questionsArray = objectMapper.readValue(file, Question[].class);
-                questions = new ArrayList<>(Arrays.asList(questionsArray));
-                System.out.println("Loaded " + questions.size() + " questions from file.");
-            } else {
-                // Create file with empty array if it doesn't exist
-                questions = new ArrayList<>();
-                saveQuestions();
-                System.out.println("Created new questions file.");
+            List<Question> questions = new ArrayList<>();
+            for (Document doc : questionsCollection.find()) {
+                Question question = documentToQuestion(doc);
+                questions.add(question);
             }
-        } catch (IOException e) {
+            System.out.println("Loaded " + questions.size() + " questions from MongoDB.");
+            return questions;
+        } catch (Exception e) {
             System.err.println("Error loading questions: " + e.getMessage());
-            questions = new ArrayList<>();
-        }
-    }
-
-    /**
-     * Save questions to JSON file
-     */
-    private synchronized void saveQuestions() {
-        try {
-            File file = new File(QUESTIONS_FILE);
-            file.getParentFile().mkdirs(); // Create directories if they don't exist
-            objectMapper.writeValue(file, questions);
-            System.out.println("Saved " + questions.size() + " questions to file.");
-        } catch (IOException e) {
-            System.err.println("Error saving questions: " + e.getMessage());
             e.printStackTrace();
+            return new ArrayList<>();
         }
     }
 
@@ -69,17 +72,23 @@ public class QuestionManager {
      * Get all questions
      */
     public synchronized List<Question> getAllQuestions() {
-        return new ArrayList<>(questions);
+        return loadQuestions();
     }
 
     /**
      * Get question by ID (MongoDB ObjectId)
      */
     public synchronized Question getQuestionById(String oid) {
-        return questions.stream()
-                .filter(q -> q.get_id().get$oid().equals(oid))
-                .findFirst()
-                .orElse(null);
+        try {
+            Document doc = questionsCollection.find(Filters.eq("_id", new ObjectId(oid))).first();
+            if (doc != null) {
+                return documentToQuestion(doc);
+            }
+            return null;
+        } catch (Exception e) {
+            System.err.println("Error getting question by ID: " + e.getMessage());
+            return null;
+        }
     }
 
     /**
@@ -87,25 +96,13 @@ public class QuestionManager {
      */
     public synchronized boolean addQuestion(Question question) {
         try {
-            // Ensure the question has an ID
-            if (question.get_id() == null) {
-                question.set_id(new Question.MongoId());
-            }
+            // Convert question to MongoDB document
+            Document doc = questionToDocument(question);
             
-            // Check if question with same ID already exists
-            String oid = question.get_id().get$oid();
-            if (getQuestionById(oid) != null) {
-                System.err.println("Question with ID " + oid + " already exists.");
-                return false;
-            }
+            // Insert into MongoDB
+            questionsCollection.insertOne(doc);
             
-            // Ensure time limit is set
-            if (question.getTimeLimitSeconds() == null) {
-                question.setTimeLimitSeconds(new Question.TimeLimit(15));
-            }
-            
-            questions.add(question);
-            saveQuestions();
+            String oid = doc.getObjectId("_id").toString();
             System.out.println("Added question: " + oid);
             return true;
         } catch (Exception e) {
@@ -120,18 +117,18 @@ public class QuestionManager {
      */
     public synchronized boolean updateQuestion(String oid, Question updatedQuestion) {
         try {
-            for (int i = 0; i < questions.size(); i++) {
-                if (questions.get(i).get_id().get$oid().equals(oid)) {
-                    // Ensure ID doesn't change
-                    updatedQuestion.set_id(questions.get(i).get_id());
-                    questions.set(i, updatedQuestion);
-                    saveQuestions();
-                    System.out.println("Updated question: " + oid);
-                    return true;
-                }
-            }
-            System.err.println("Question with ID " + oid + " not found.");
-            return false;
+            ObjectId objectId = new ObjectId(oid);
+            Document doc = questionToDocument(updatedQuestion);
+            doc.put("_id", objectId); // Ensure ID doesn't change
+            
+            questionsCollection.replaceOne(
+                Filters.eq("_id", objectId),
+                doc,
+                new ReplaceOptions().upsert(false)
+            );
+            
+            System.out.println("Updated question: " + oid);
+            return true;
         } catch (Exception e) {
             System.err.println("Error updating question: " + e.getMessage());
             e.printStackTrace();
@@ -144,9 +141,10 @@ public class QuestionManager {
      */
     public synchronized boolean deleteQuestion(String oid) {
         try {
-            boolean removed = questions.removeIf(q -> q.get_id().get$oid().equals(oid));
-            if (removed) {
-                saveQuestions();
+            ObjectId objectId = new ObjectId(oid);
+            var result = questionsCollection.deleteOne(Filters.eq("_id", objectId));
+            
+            if (result.getDeletedCount() > 0) {
                 System.out.println("Deleted question: " + oid);
                 return true;
             }
@@ -162,33 +160,132 @@ public class QuestionManager {
      * Get questions by text search
      */
     public synchronized List<Question> searchQuestions(String searchText) {
-        return questions.stream()
-                .filter(q -> q.getQuestionText().toLowerCase().contains(searchText.toLowerCase()))
-                .collect(Collectors.toList());
+        try {
+            List<Question> results = new ArrayList<>();
+            for (Document doc : questionsCollection.find(
+                Filters.regex("questionText", searchText, "i")
+            )) {
+                results.add(documentToQuestion(doc));
+            }
+            return results;
+        } catch (Exception e) {
+            System.err.println("Error searching questions: " + e.getMessage());
+            return new ArrayList<>();
+        }
     }
 
     /**
      * Get questions by time limit
      */
     public synchronized List<Question> getQuestionsByTimeLimit(int seconds) {
-        return questions.stream()
-                .filter(q -> q.getTimeLimitSeconds().getSeconds() == seconds)
-                .collect(Collectors.toList());
+        try {
+            List<Question> allQuestions = loadQuestions();
+            return allQuestions.stream()
+                    .filter(q -> q.getTimeLimitSeconds().getSeconds() == seconds)
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            System.err.println("Error filtering questions by time limit: " + e.getMessage());
+            return new ArrayList<>();
+        }
     }
 
     /**
      * Get total number of questions
      */
     public synchronized int getQuestionCount() {
-        return questions.size();
+        return (int) questionsCollection.countDocuments();
     }
 
     /**
      * Clear all questions (use with caution!)
      */
     public synchronized void clearAllQuestions() {
-        questions.clear();
-        saveQuestions();
+        questionsCollection.deleteMany(new Document());
         System.out.println("Cleared all questions.");
+    }
+
+    /**
+     * Convert MongoDB Document to Question object
+     */
+    private Question documentToQuestion(Document doc) {
+        Question question = new Question();
+        
+        // Set _id
+        ObjectId objectId = doc.getObjectId("_id");
+        question.set_id(new Question.MongoId(objectId.toString()));
+        
+        // Set question text
+        question.setQuestionText(doc.getString("questionText"));
+        
+        // Set options
+        List<String> optionsList = doc.getList("options", String.class);
+        question.setOptions(optionsList.toArray(new String[0]));
+        
+        // Set correct option
+        question.setCorrectOption(doc.getString("correctOption"));
+        
+        // Set time limit - handle both integer and Document formats
+        Object timeLimitObj = doc.get("timeLimitSeconds");
+        if (timeLimitObj instanceof Document) {
+            // Format: {"$numberInt": "15"}
+            Document timeLimitDoc = (Document) timeLimitObj;
+            String timeValue = timeLimitDoc.getString("$numberInt");
+            question.setTimeLimitSeconds(new Question.TimeLimit(timeValue));
+        } else if (timeLimitObj instanceof Integer) {
+            // Format: 15 (plain integer)
+            Integer timeValue = (Integer) timeLimitObj;
+            question.setTimeLimitSeconds(new Question.TimeLimit(timeValue));
+        } else {
+            // Default to 15 seconds
+            question.setTimeLimitSeconds(new Question.TimeLimit(15));
+        }
+        
+        return question;
+    }
+
+    /**
+     * Convert Question object to MongoDB Document
+     */
+    private Document questionToDocument(Question question) {
+        Document doc = new Document();
+        
+        // Set _id if provided
+        if (question.get_id() != null && question.get_id().get$oid() != null) {
+            try {
+                doc.put("_id", new ObjectId(question.get_id().get$oid()));
+            } catch (IllegalArgumentException e) {
+                // If invalid ObjectId, MongoDB will generate a new one
+            }
+        }
+        
+        // Set question text
+        doc.put("questionText", question.getQuestionText());
+        
+        // Set options
+        List<String> optionsList = new ArrayList<>();
+        for (String option : question.getOptions()) {
+            optionsList.add(option);
+        }
+        doc.put("options", optionsList);
+        
+        // Set correct option
+        doc.put("correctOption", question.getCorrectOption());
+        
+        // Set time limit in MongoDB extended JSON format
+        Document timeLimitDoc = new Document("$numberInt", 
+            question.getTimeLimitSeconds().get$numberInt());
+        doc.put("timeLimitSeconds", timeLimitDoc);
+        
+        return doc;
+    }
+
+    /**
+     * Close MongoDB connection
+     */
+    public void close() {
+        if (mongoClient != null) {
+            mongoClient.close();
+            System.out.println("MongoDB connection closed.");
+        }
     }
 }

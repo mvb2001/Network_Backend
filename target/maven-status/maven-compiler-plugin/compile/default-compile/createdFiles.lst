@@ -1,7 +1,9 @@
+utils\QuestionSeeder.class
 Main.class
 admin\AdminAuthentication.class
 model\Question.class
 model\Question$MongoId.class
+utils\QuickAddQuestion.class
 utils\QuestionManager.class
 admin\AdminRequestHandler.class
 model\Question$TimeLimit.class
