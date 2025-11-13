@@ -11,10 +11,10 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.List;
 
-public class ClientHandler implements Runnable {
+public class ClientHandlerM implements Runnable {
     private Socket clientSocket;
 
-    public ClientHandler(Socket clientSocket) {
+    public ClientHandlerM(Socket clientSocket) {
         this.clientSocket = clientSocket;
     }
 

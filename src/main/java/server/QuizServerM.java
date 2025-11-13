@@ -3,7 +3,7 @@ package server;
 import java.net.ServerSocket;
 import java.net.Socket;
 
-public class QuizServer {
+public class QuizServerM {
     public static void main(String[] args) {
         int port = 5000;
         try (ServerSocket serverSocket = new ServerSocket(port)) {
@@ -11,7 +11,7 @@ public class QuizServer {
 
             while (true) {
                 Socket clientSocket = serverSocket.accept();
-                new Thread(new server.ClientHandler(clientSocket)).start();
+                new Thread(new ClientHandlerM(clientSocket)).start();
             }
 
         } catch (Exception e) {
