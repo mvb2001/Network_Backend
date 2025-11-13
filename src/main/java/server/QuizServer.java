@@ -74,19 +74,24 @@ public class QuizServer {
         }
     }
 
-    /**
-     * Broadcast updated leaderboard to all clients
-     */
-    public static void broadcastLeaderboardUpdate() {
-        List<Map.Entry<String, Integer>> leaderboard = scoreManager.getLeaderboard();
-
-        StringBuilder sb = new StringBuilder("LEADERBOARD:");
-        for (Map.Entry<String, Integer> entry : leaderboard) {
-            sb.append(entry.getKey()).append(":").append(entry.getValue()).append(",");
-        }
-
-        broadcastToAll(sb.toString());
+   public static void broadcastLeaderboardUpdate() {
+    List<Map.Entry<String, Integer>> leaderboard = scoreManager.getLeaderboard();
+    
+    StringBuilder sb = new StringBuilder("LEADERBOARD:");
+    for (Map.Entry<String, Integer> entry : leaderboard) {
+        int streak = scoreManager.getStreak(entry.getKey());
+        sb.append(entry.getKey()).append(":")
+          .append(entry.getValue()).append(":")
+          .append(streak).append(",");
     }
+    
+    // Remove trailing comma
+    if (sb.charAt(sb.length() - 1) == ',') {
+        sb.setLength(sb.length() - 1);
+    }
+    
+    broadcastToAll(sb.toString());
+}
 
     /**
      * Remove client when they disconnect
