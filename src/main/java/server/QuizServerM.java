@@ -5,7 +5,7 @@ import java.net.Socket;
 
 public class QuizServerM {
     public static void main(String[] args) {
-        int port = 5000;
+        int port = 5050;
         try (ServerSocket serverSocket = new ServerSocket(port)) {
             System.out.println("Quiz Server running on port " + port);
 
