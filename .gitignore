@@ -26,9 +26,5 @@ bin/
 .vscode/
 .env
 # Keep your MongoDB JARs
-<<<<<<< HEAD
-target
-=======
 
 target/
->>>>>>> main
