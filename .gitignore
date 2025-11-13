@@ -27,4 +27,4 @@ bin/
 .env
 # Keep your MongoDB JARs
 
-/target/
+target/
