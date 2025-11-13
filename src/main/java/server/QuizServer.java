@@ -1,4 +1,4 @@
-package servers;
+package server;
 
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -11,7 +11,7 @@ public class QuizServer {
 
             while (true) {
                 Socket clientSocket = serverSocket.accept();
-                new Thread(new servers.ClientHandler(clientSocket)).start();
+                new Thread(new server.ClientHandler(clientSocket)).start();
             }
 
         } catch (Exception e) {

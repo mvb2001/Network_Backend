@@ -1,5 +1,5 @@
 
-package servers;
+package server;
 
 import models.Question;
 import models.QuestionWithStartTime;
