@@ -69,9 +69,20 @@ public class AdminRequestHandler implements Runnable {
             ObjectNode jsonRequest = (ObjectNode) objectMapper.readTree(request);
             String action = jsonRequest.get("action").asText();
 
-            // Authentication required for all actions except LOGIN
-            if (!"LOGIN".equals(action) && !isAuthenticated) {
-                return createErrorResponse("Authentication required");
+            // Check for session token in request (except for LOGIN)
+            if (!"LOGIN".equals(action)) {
+                if (jsonRequest.has("sessionToken")) {
+                    String token = jsonRequest.get("sessionToken").asText();
+                    // Simple token validation - token should match username
+                    if (token != null && !token.isEmpty()) {
+                        isAuthenticated = true;
+                        authenticatedUser = token;
+                    }
+                }
+                
+                if (!isAuthenticated) {
+                    return createErrorResponse("Authentication required");
+                }
             }
 
             switch (action) {
@@ -109,7 +120,18 @@ public class AdminRequestHandler implements Runnable {
             if (AdminAuthentication.authenticate(username, password)) {
                 isAuthenticated = true;
                 authenticatedUser = username;
-                return createSuccessResponse("Login successful", "user", username);
+                
+                // Create response with session token
+                ObjectNode response = objectMapper.createObjectNode();
+                response.put("status", "success");
+                response.put("message", "Login successful");
+                response.put("token", username); // Simple token (username)
+                
+                ObjectNode data = objectMapper.createObjectNode();
+                data.put("user", username);
+                response.set("data", data);
+                
+                return response.toString();
             } else {
                 return createErrorResponse("Invalid credentials");
             }

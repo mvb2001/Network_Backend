@@ -10,4 +10,5 @@ Main.class
 admin\AdminAuthentication.class
 utils\IQuestionManager.class
 model\Question.class
+utils\VerifyQuestions.class
 admin\AdminRequestHandler.class
