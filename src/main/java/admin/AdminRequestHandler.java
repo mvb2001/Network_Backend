@@ -11,7 +11,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import model.Question;
-import utils.QuestionManager;
+import utils.IQuestionManager;
 
 /**
  * AdminRequestHandler processes admin requests via socket communication
@@ -19,12 +19,12 @@ import utils.QuestionManager;
  */
 public class AdminRequestHandler implements Runnable {
     private final Socket clientSocket;
-    private final QuestionManager questionManager;
+    private final IQuestionManager questionManager;
     private final ObjectMapper objectMapper;
     private boolean isAuthenticated = false;
     private String authenticatedUser = null;
 
-    public AdminRequestHandler(Socket socket, QuestionManager questionManager) {
+    public AdminRequestHandler(Socket socket, IQuestionManager questionManager) {
         this.clientSocket = socket;
         this.questionManager = questionManager;
         this.objectMapper = new ObjectMapper();

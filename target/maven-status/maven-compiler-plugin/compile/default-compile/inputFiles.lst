@@ -2,6 +2,8 @@ C:\Users\Sashini\NPAssignment\Backend\Network_Backend\src\main\java\admin\AdminA
 C:\Users\Sashini\NPAssignment\Backend\Network_Backend\src\main\java\admin\AdminRequestHandler.java
 C:\Users\Sashini\NPAssignment\Backend\Network_Backend\src\main\java\Main.java
 C:\Users\Sashini\NPAssignment\Backend\Network_Backend\src\main\java\model\Question.java
+C:\Users\Sashini\NPAssignment\Backend\Network_Backend\src\main\java\utils\IQuestionManager.java
+C:\Users\Sashini\NPAssignment\Backend\Network_Backend\src\main\java\utils\JSONQuestionManager.java
 C:\Users\Sashini\NPAssignment\Backend\Network_Backend\src\main\java\utils\QuestionManager.java
 C:\Users\Sashini\NPAssignment\Backend\Network_Backend\src\main\java\utils\QuestionSeeder.java
 C:\Users\Sashini\NPAssignment\Backend\Network_Backend\src\main\java\utils\QuickAddQuestion.java

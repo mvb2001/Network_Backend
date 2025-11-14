@@ -23,7 +23,7 @@ import model.Question;
  * QuestionManager handles CRUD operations for quiz questions
  * Stores and retrieves questions from MongoDB database
  */
-public class QuestionManager {
+public class QuestionManager implements IQuestionManager {
     private final MongoCollection<Document> questionsCollection;
     private final ObjectMapper objectMapper;
     private final MongoClient mongoClient;
